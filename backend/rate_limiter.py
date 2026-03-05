@@ -20,20 +20,30 @@ class InMemoryRateLimiter:
         self.dos_threshold = int(os.getenv("DOS_THRESHOLD_PER_MINUTE", 100))
         self.block_duration_minutes = int(os.getenv("BLOCK_DURATION_MINUTES", 15))
     
-    def _get_client_ip(self, request: Request) -> str:
+    def _get_client_ip(self, request) -> str:
         """Get client IP address from request"""
         # Check for forwarded IP first (in case of proxy)
-        forwarded_for = request.headers.get("x-forwarded-for")
-        if forwarded_for:
-            return forwarded_for.split(",")[0].strip()
+        if hasattr(request, 'headers'):
+            forwarded_for = request.headers.get("x-forwarded-for")
+            if forwarded_for:
+                return forwarded_for.split(",")[0].strip()
+            
+            # Check for real IP header
+            real_ip = request.headers.get("x-real-ip")
+            if real_ip:
+                return real_ip
         
-        # Check for real IP header
-        real_ip = request.headers.get("x-real-ip")
-        if real_ip:
-            return real_ip
+        # Handle different request types
+        if hasattr(request, 'client'):
+            if isinstance(request.client, tuple):
+                # From ASGI scope (middleware)
+                return request.client[0] if request.client else "unknown"
+            elif hasattr(request.client, 'host'):
+                # From FastAPI Request object
+                return request.client.host
         
-        # Fall back to client host
-        return request.client.host if request.client else "unknown"
+        # Fallback
+        return "unknown"
     
     def _cleanup_old_requests(self, key: str, window_seconds: int = 60):
         """Remove old request timestamps outside the window"""
@@ -209,7 +219,12 @@ class RateLimitMiddleware:
                 def __init__(self, scope):
                     self.scope = scope
                     self.client = scope.get("client")
-                    self.headers = dict(scope.get("headers", []))
+                    # Convert headers from list of byte tuples to dict
+                    headers_list = scope.get("headers", [])
+                    self.headers = {
+                        key.decode().lower(): value.decode() 
+                        for key, value in headers_list
+                    }
             
             request = SimpleRequest(scope)
             
