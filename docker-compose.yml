@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15
+    container_name: labrats-db
+    environment:
+      POSTGRES_DB: labrats_db
+      POSTGRES_USER: labrats_user
+      POSTGRES_PASSWORD: labrats_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - labrats-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: labrats-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - labrats-network
+
+  # FastAPI Backend
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: labrats-backend
+    environment:
+      DATABASE_URL: postgresql://labrats_user:labrats_password@db:5432/labrats_db
+      ASYNC_DATABASE_URL: postgresql+asyncpg://labrats_user:labrats_password@db:5432/labrats_db
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: your-production-secret-key-change-this
+      ENVIRONMENT: production
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./frontend:/app/frontend:ro
+    networks:
+      - labrats-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  labrats-network:
+    driver: bridge
