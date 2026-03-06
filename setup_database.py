@@ -68,7 +68,7 @@ class LoginAttempt(Base):
 
 def setup_database():
     """Set up the database with tables and initial data"""
-    print("🔧 Setting up LabRats database...")
+    print("Setting up LabRats database...")
     
     try:
         # Create engine and session
@@ -76,7 +76,7 @@ def setup_database():
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         
         # Create all tables
-        print("📋 Creating database tables...")
+        print("Creating database tables...")
         Base.metadata.create_all(bind=engine)
         print("✓ Tables created successfully")
         
@@ -106,7 +106,7 @@ def setup_database():
                 print("✓ Manager user created successfully")
                 print("📧 Email: admin@labrats.com")
                 print("🔑 Password: admin123")
-                print("⚠️  Please change the password after first login!")
+                print("WARNING: Please change the password after first login!")
             else:
                 print("✓ Manager user already exists")
             
@@ -155,13 +155,13 @@ def setup_database():
         finally:
             db.close()
         
-        print("\n🎉 Database setup completed successfully!")
-        print("\n📊 Database Information:")
+        print("\nDatabase setup completed successfully!")
+        print("\nDatabase Information:")
         print(f"   URL: {DATABASE_URL}")
-        print("\n🔐 Default Login Credentials:")
+        print("\nDefault Login Credentials:")
         print("   Manager: admin@labrats.com / admin123")
         print("   User: user@labrats.com / user123")
-        print("\n🚀 You can now start the application with:")
+        print("\nYou can now start the application with:")
         print("   cd c:\\Users\\mmatt\\LabRats")
         print("   python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000")
         
