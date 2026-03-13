@@ -8,9 +8,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Safe default: use local sqlite file if DATABASE_URL not provided
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./labrats.db")
 
-engine = create_engine(DATABASE_URL)
+# For SQLite we need to set connect_args
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

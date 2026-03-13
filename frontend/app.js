@@ -102,7 +102,8 @@ async function handleLogin(e) {
             showToast('Login successful!', 'success');
             showDashboard();
         } else {
-            showToast(data.detail || 'Login failed', 'error');
+            console.error('Login failed', response.status, data);
+            showToast(data.detail || JSON.stringify(data) || 'Login failed', 'error');
         }
     } catch (error) {
         console.error('Login error:', error);
@@ -143,7 +144,8 @@ async function handleRegister(e) {
             switchTab('login');
             e.target.reset();
         } else {
-            showToast(data.detail || 'Registration failed', 'error');
+            console.error('Registration failed', response.status, data);
+            showToast(data.detail || JSON.stringify(data) || 'Registration failed', 'error');
         }
     } catch (error) {
         console.error('Registration error:', error);
@@ -189,7 +191,14 @@ function showDashboard() {
     document.getElementById('login-section').classList.add('hidden');
     document.getElementById('dashboard').classList.remove('hidden');
     document.getElementById('navbar').classList.remove('hidden');
-    
+
+    // Reset sections to a clean state
+    document.getElementById('user-dashboard').classList.add('hidden');
+    document.getElementById('manager-dashboard').classList.add('hidden');
+    document.getElementById('profile-section').classList.add('hidden');
+    document.getElementById('security-logs-section').classList.add('hidden');
+    document.getElementById('edit-user-modal').classList.remove('show');
+
     // Update navigation
     document.getElementById('user-welcome').textContent = `Welcome, ${currentUser.full_name}`;
     
